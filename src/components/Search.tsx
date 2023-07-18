@@ -9,17 +9,6 @@ const isEmptyObject = (obj: object): boolean => {
   return Object.keys(obj).length === 0;
 };
 
-let lastKeyDownTime = 0;
-
-const filterDoubleEvents = (currentTime: number) => {
-  // 10ms 간격으로 이벤트 발생 시 동일 입력으로 처리
-  if (currentTime - lastKeyDownTime < 10) {
-    return true;
-  }
-  lastKeyDownTime = currentTime;
-  return false;
-};
-
 export default function Search() {
   const [recommends, setRecommends] = useState<Sick[]>([]);
   const cache = useRef<{ [key: string]: Sick[] }>({});
@@ -37,7 +26,7 @@ export default function Search() {
 
     if (isEmptyObject(cache.current)) {
       setTimeout(() => {
-        console.log('expire time 만료, 캐시 비움');
+        // console.log('expire time 만료, 캐시 비움');
         cache.current = {};
       }, EXPIRE_TIME);
     }
@@ -47,21 +36,26 @@ export default function Search() {
       return;
     }
 
-    const result = await searchAPI(input);
-    console.info('calling api');
+    try {
+      const result = await searchAPI(input);
+      console.info('calling api');
 
-    if (result.length === 0) {
-      result.push({ sickCd: '-1', sickNm: '검색어 없음' });
+      if (result.length === 0) {
+        result.push({ sickCd: '-1', sickNm: '검색어 없음' });
+      }
+
+      cache.current[input] = result;
+      setRecommends(result);
+    } catch (error) {
+      console.log('error :>> ', error);
     }
-
-    cache.current[input] = result;
-    setRecommends(result);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.nativeEvent.isComposing) return;
+
     switch (event.key) {
       case 'ArrowUp':
-        if (filterDoubleEvents(Date.now())) return;
         setSelectedIdx((prevIdx) => {
           if (prevIdx === -1) {
             return prevIdx;
@@ -74,7 +68,6 @@ export default function Search() {
         break;
         return;
       case 'ArrowDown':
-        if (filterDoubleEvents(Date.now())) return;
         setSelectedIdx((prevIdx) => {
           if (prevIdx === recommends.length - 1) {
             return 0;
