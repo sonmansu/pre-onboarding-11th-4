@@ -9,16 +9,27 @@ const isEmptyObject = (obj: object): boolean => {
   return Object.keys(obj).length === 0;
 };
 
+let lastKeyDownTime = 0;
+
+const filterDoubleEvents = (currentTime: number) => {
+  // 10ms 간격으로 이벤트 발생 시 동일 입력으로 처리
+  if (currentTime - lastKeyDownTime < 10) {
+    return true;
+  }
+  lastKeyDownTime = currentTime;
+  return false;
+};
+
 export default function Search() {
   const [recommends, setRecommends] = useState<Sick[]>([]);
   const cache = useRef<{ [key: string]: Sick[] }>({});
-
-  // TODO 키보드 입력 구현
+  const [selectedIdx, setSelectedIdx] = useState(-1);
 
   const handleChangeInput = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const input = event.currentTarget.value;
+    setSelectedIdx(-1);
     if (input === '') {
       setRecommends([]);
       return;
@@ -47,6 +58,36 @@ export default function Search() {
     setRecommends(result);
   };
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    switch (event.key) {
+      case 'ArrowUp':
+        if (filterDoubleEvents(Date.now())) return;
+        setSelectedIdx((prevIdx) => {
+          if (prevIdx === -1) {
+            return prevIdx;
+          }
+          if (prevIdx === 0) {
+            return recommends.length - 1;
+          }
+          return prevIdx - 1;
+        });
+        break;
+        return;
+      case 'ArrowDown':
+        if (filterDoubleEvents(Date.now())) return;
+        setSelectedIdx((prevIdx) => {
+          if (prevIdx === recommends.length - 1) {
+            return 0;
+          }
+          return prevIdx + 1;
+        });
+        return;
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <div>
       검색창
@@ -54,10 +95,16 @@ export default function Search() {
         className='border-2  border-solid border-cyan-600'
         type='text'
         onChange={handleChangeInput}
+        onKeyDown={handleKeyDown}
       />
       <ul>
-        {recommends.map(({ sickCd, sickNm }) => (
-          <li key={sickCd} className='flex items-center hover:bg-slate-300 p-2'>
+        {recommends.map(({ sickCd, sickNm }, idx) => (
+          <li
+            key={sickCd}
+            className={`flex items-center hover:bg-slate-300 p-2 ${
+              idx === selectedIdx ? 'bg-slate-300' : ''
+            }`}
+          >
             <div className='w-4'>
               <SearchIcon />
             </div>
