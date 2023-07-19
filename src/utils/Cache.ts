@@ -4,8 +4,13 @@ export interface ICache<T> {
   get: (key: string) => T;
 }
 
+interface CacheValue<T> {
+  data: T;
+  timeStamp: number;
+}
+
 export class Cache<T> implements ICache<T> {
-  private cache: { [key: string]: { data: T; timeStamp: number } };
+  private cache: { [key: string]: CacheValue<T> };
   private readonly EXPIRE_TIME = 20 * 1000;
 
   constructor() {
