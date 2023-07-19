@@ -1,46 +1,58 @@
-# Getting Started with Create React App
+원티드 4주차 과제 레파지토리입니다.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 과제 목표
 
-## Available Scripts
+- 검색창 구현
+- 검색어 추천 기능 구현
+- 캐싱 기능 구현
 
-In the project directory, you can run:
+## API 레파지토리
 
-### `npm start`
+https://github.com/walking-sunset/assignment-api
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+# 로컬 캐싱 구현
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+객체에 `검색어: api 호출 결과` 형태로 저장하여 캐시를 구현하였습니다.
 
-### `npm test`
+검색어가 인력 창에 입력되면 먼저 캐시에서 검색어와 일치하는 프로퍼티를 찾습니다. 프로퍼티가 존재하는 경우 api를 호출하는 대신 캐시에 저장된 값을 사용합니다.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+검색어가 캐시에 없으면 api를 새로 호출하고 결과를 캐시에 저장합니다.
 
-### `npm run build`
+## 캐시 자료 구조 - 객체
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+캐시를 웹 스토리지에 저장할 지 자바스크립트 메모리 내에 저장할 지에 대한 고민을 했습니다.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+웹 스토리지와 변수의 장단점을 다음과 같이 정리해보았습니다.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- **변수:**
+    - 장점: 메모리에 저장되기 때문에 빠르게 읽고 쓸 수 있음
+    - 단점: 메모리 공간을 차지하므로 많은 데이터를 저장하면 프로그램 속도가 느려질 수 있음
+- **웹 스토리지**
+    - 장점: 메모리 공간을 차지 하지 않음
+    - 단점: I/O 작업을 포함하기 때문에 변수보다 느림
 
-### `npm run eject`
+만료 시간을 적용하면 메모리를 무기한으로 차지할 걱정이 없고,
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+빈번한 읽기 및 쓰기 작업이 발생하므로 변수에 저장하는 것이 적합하다고 판단했습니다.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 캐시 관련 로직은 클래스로 분리
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+캐시와 관련된 동작과 상태를 저장하기 위해 캐시 관련 로직을 클래스로 분리하였습니다.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+외부에서 캐시에 직접 접근하여 임의로 수정하는 일이 발생하지 않도록 private field에 저장하였습니다.
 
-## Learn More
+캐시 값을 조작하기 위해선 인터페이스에 정의된 `has` `set` `get` 메서드를 통해 이루어집니다.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 만료 시간 구현
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+만료 시간을 Cache 클래스의 private field로 저장하였습니다.
+
+캐시에 새로운 아이템이 추가될 때마다 현재 시간을 저장합니다.
+
+캐시의 값을 읽어올 때 현재 시간과 아이템이 추가된 시간을 비교합니다. 만료 시간이 지났으면 캐시된 데이터가 오래된 것으로 간주하여 api를 새로 호출합니다.
+
+# 키보드를 통한 추천 검색어 탐색
+
+검색어를 입력한 후 위쪽 및 아래쪽 화살표 키를 사용하여 추천 검색어를 탐색할 수 있는 기능을 구현했습니다.
+
+한글 입력 시 keyDown 이벤트가 중복으로 발생하는 것을 막기 위해 `Keyboard.isComposing` 값을 확인하여  문제를 해결하였습니다.
