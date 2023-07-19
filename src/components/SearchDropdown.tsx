@@ -1,17 +1,10 @@
-import React, {
-  ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import React, { ReactNode, useCallback, useMemo, useRef } from 'react';
 import styled, { css } from 'styled-components';
 import { Sick } from '../utils/types';
 import { ReactComponent as SearchIcon } from '../assets/search.svg';
 import { COLOR } from '../utils/styles';
 
 interface ModalProps {
-  isOpen: boolean;
   onClose: () => void;
   searchKeyword: string;
   suggestions: Sick[];
@@ -20,15 +13,12 @@ interface ModalProps {
 }
 
 export default function SearchDropdown({
-  isOpen,
   onClose,
   searchKeyword,
   selectedIdx,
   suggestions,
   setInput,
 }: ModalProps) {
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
   const handleSetInput = useCallback(
     (text: string) => {
       setInput(text);
@@ -52,32 +42,8 @@ export default function SearchDropdown({
     ));
   }, [handleSetInput, suggestions, selectedIdx]);
 
-  const handleClickOutside = useCallback(
-    (e: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
-        onClose();
-      }
-    },
-    [onClose],
-  );
-
-  useEffect(() => {
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen, onClose, handleClickOutside]);
-
-  return isOpen ? (
-    <Wrap ref={dropdownRef}>
+  return (
+    <Wrap>
       <SearchItemWrap>
         <SearchIcon fill={COLOR.gray300} />
         <SearchText>{searchKeyword}</SearchText>
@@ -85,7 +51,7 @@ export default function SearchDropdown({
       <RecommendText>추천 검색어</RecommendText>
       <ul>{suggestionListJsx}</ul>
     </Wrap>
-  ) : null;
+  );
 }
 
 const Wrap = styled.div`
@@ -110,6 +76,8 @@ const SearchItemWrap = styled.div<{ $isActive?: boolean }>`
   align-items: center;
 
   padding: 7px 20px;
+
+  cursor: pointer;
 
   ${({ $isActive }) =>
     $isActive &&

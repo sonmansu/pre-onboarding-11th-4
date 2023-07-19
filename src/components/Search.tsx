@@ -6,12 +6,13 @@ import { styled } from 'styled-components';
 import { COLOR } from '../utils/styles';
 import SearchDropdown from './SearchDropdown';
 import { Cache } from '../utils/Cache';
+import { useClickOutside } from '../hooks/useClickOutside';
 
 export default function Search() {
-  const [isFocused, setIsFocused] = useState(false);
   const [input, setInput] = useState('');
-  const [recommends, setRecommends] = useState<Sick[]>([]);
+  const [suggestions, setSuggestions] = useState<Sick[]>([]);
   const [selectedIdx, setSelectedIdx] = useState(-1);
+  const { ref, isVisible, setIsVisible } = useClickOutside(false);
 
   const cache = useRef(new Cache<Sick[]>()).current;
 
@@ -22,12 +23,12 @@ export default function Search() {
     setInput(input);
     setSelectedIdx(-1);
     if (input === '') {
-      setRecommends([]);
+      setSuggestions([]);
       return;
     }
 
     if (cache.has(input)) {
-      setRecommends(cache.get(input));
+      setSuggestions(cache.get(input));
       return;
     }
 
@@ -36,14 +37,14 @@ export default function Search() {
       console.info('calling api');
 
       cache.set(input, result);
-      setRecommends(result);
+      setSuggestions(result);
     } catch (error) {
       console.log('error :>> ', error);
     }
   };
 
   const handleOpenDropdown = () => {
-    setIsFocused(true);
+    setIsVisible(true);
     setSelectedIdx(-1);
   };
 
@@ -57,7 +58,7 @@ export default function Search() {
             return prevIdx;
           }
           if (prevIdx === 0) {
-            return recommends.length - 1;
+            return suggestions.length - 1;
           }
           return prevIdx - 1;
         });
@@ -65,7 +66,7 @@ export default function Search() {
         return;
       case 'ArrowDown':
         setSelectedIdx((prevIdx) => {
-          if (prevIdx === recommends.length - 1) {
+          if (prevIdx === suggestions.length - 1) {
             return 0;
           }
           return prevIdx + 1;
@@ -84,8 +85,8 @@ export default function Search() {
         <br />
         온라인으로 참여하기
       </Title>
-      <SearchWrap $isFocused={isFocused}>
-        {!isFocused && (
+      <SearchWrap $isFocused={isVisible} ref={ref}>
+        {!isVisible && input.length === 0 && (
           <SearchIconWrap>
             <SearchIcon fill='#A7AFB7' />
           </SearchIconWrap>
@@ -101,16 +102,15 @@ export default function Search() {
         <SearchBtn>
           <SearchIcon width={21} height={21} fill='white' />
         </SearchBtn>
-        {
+        {isVisible && (
           <SearchDropdown
-            suggestions={recommends}
-            isOpen={isFocused}
+            suggestions={suggestions}
             searchKeyword={input}
-            onClose={() => setIsFocused(false)}
+            onClose={() => setIsVisible(false)}
             setInput={setInput}
             selectedIdx={selectedIdx}
           />
-        }
+        )}
       </SearchWrap>
     </Wrap>
   );
