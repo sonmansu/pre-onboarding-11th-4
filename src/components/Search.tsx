@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { searchAPI } from '../apis/search';
 import { ReactComponent as SearchIcon } from '../assets/search.svg';
 import { Sick } from '../utils/types';
@@ -8,7 +8,7 @@ import SearchDropdown from './SearchDropdown';
 import { Cache } from '../utils/Cache';
 
 export default function Search() {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [input, setInput] = useState('');
   const [recommends, setRecommends] = useState<Sick[]>([]);
   const [selectedIdx, setSelectedIdx] = useState(-1);
@@ -35,10 +35,6 @@ export default function Search() {
       const result = await searchAPI(input);
       console.info('calling api');
 
-      if (result.length === 0) {
-        result.push({ sickCd: '-1', sickNm: '검색어 없음' });
-      }
-
       cache.set(input, result);
       setRecommends(result);
     } catch (error) {
@@ -47,7 +43,7 @@ export default function Search() {
   };
 
   const handleOpenDropdown = () => {
-    setIsDropdownOpen(true);
+    setIsFocused(true);
     setSelectedIdx(-1);
   };
 
@@ -88,8 +84,8 @@ export default function Search() {
         <br />
         온라인으로 참여하기
       </Title>
-      <SearchWrap $isFocused={isDropdownOpen}>
-        {input.length === 0 && (
+      <SearchWrap $isFocused={isFocused}>
+        {!isFocused && (
           <SearchIconWrap>
             <SearchIcon fill='#A7AFB7' />
           </SearchIconWrap>
@@ -108,9 +104,9 @@ export default function Search() {
         {
           <SearchDropdown
             suggestions={recommends}
-            isOpen={isDropdownOpen}
+            isOpen={isFocused}
             searchKeyword={input}
-            onClose={() => setIsDropdownOpen(false)}
+            onClose={() => setIsFocused(false)}
             setInput={setInput}
             selectedIdx={selectedIdx}
           />
@@ -162,6 +158,9 @@ const Input = styled.input`
 
   &:focus-visible {
     outline: none;
+  }
+  &:focus::placeholder {
+    color: transparent;
   }
 `;
 
