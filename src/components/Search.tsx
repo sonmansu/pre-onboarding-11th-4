@@ -1,16 +1,11 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { searchAPI } from '../apis/search';
 import { ReactComponent as SearchIcon } from '../assets/search.svg';
 import { Sick } from '../utils/types';
 import { styled } from 'styled-components';
 import { COLOR } from '../utils/styles';
 import SearchDropdown from './SearchDropdown';
-
-const EXPIRE_TIME = 20 * 1000;
-
-const isEmptyObject = (obj: object): boolean => {
-  return Object.keys(obj).length === 0;
-};
+import { Cache } from '../utils/Cache';
 
 export default function Search() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -18,7 +13,7 @@ export default function Search() {
   const [recommends, setRecommends] = useState<Sick[]>([]);
   const [selectedIdx, setSelectedIdx] = useState(-1);
 
-  const cache = useRef<{ [key: string]: Sick[] }>({});
+  const cache = useRef(new Cache<Sick[]>()).current;
 
   const handleChangeInput = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -31,15 +26,8 @@ export default function Search() {
       return;
     }
 
-    if (isEmptyObject(cache.current)) {
-      setTimeout(() => {
-        // console.log('expire time 만료, 캐시 비움');
-        cache.current = {};
-      }, EXPIRE_TIME);
-    }
-
-    if (cache.current[input]) {
-      setRecommends(cache.current[input]);
+    if (cache.has(input)) {
+      setRecommends(cache.get(input));
       return;
     }
 
@@ -51,7 +39,7 @@ export default function Search() {
         result.push({ sickCd: '-1', sickNm: '검색어 없음' });
       }
 
-      cache.current[input] = result;
+      cache.set(input, result);
       setRecommends(result);
     } catch (error) {
       console.log('error :>> ', error);
