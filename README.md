@@ -1,16 +1,24 @@
 원티드 4주차 과제 레파지토리입니다.
 
-## 과제 목표
+# 과제 목표
 
 - 검색창 구현
 - 검색어 추천 기능 구현
 - 캐싱 기능 구현
 
-## API 레파지토리
 
-https://github.com/walking-sunset/assignment-api
 
-# 로컬 캐싱 구현
+# 실행 방법
+1. API 서버 실행 (API 레파지토리: https://github.com/walking-sunset/assignment-api)
+2. 본 레파지토리 clone 후 아래 명령어 입력
+    ```
+    $ npm install
+    $ npm start
+    ```
+
+# 구현 사항
+
+## 1. 로컬 캐싱 구현
 
 객체에 `검색어: api 호출 결과` 형태로 저장하여 캐시를 구현하였습니다.
 
@@ -18,7 +26,7 @@ https://github.com/walking-sunset/assignment-api
 
 검색어가 캐시에 없으면 api를 새로 호출하고 결과를 캐시에 저장합니다.
 
-## 캐시 자료 구조 - 객체
+### 캐시 자료 구조 - 객체
 
 캐시를 웹 스토리지에 저장할 지 자바스크립트 메모리 내에 저장할 지에 대한 고민을 했습니다.
 
@@ -35,7 +43,7 @@ https://github.com/walking-sunset/assignment-api
 
 빈번한 읽기 및 쓰기 작업이 발생하므로 변수에 저장하는 것이 적합하다고 판단했습니다.
 
-## 캐시 관련 로직은 클래스로 분리
+### 캐시 관련 로직은 클래스로 분리
 
 캐시와 관련된 동작과 상태를 저장하기 위해 캐시 관련 로직을 클래스로 분리하였습니다.
 
@@ -43,7 +51,7 @@ https://github.com/walking-sunset/assignment-api
 
 캐시 값을 조작하기 위해선 인터페이스에 정의된 `has` `set` `get` 메서드를 통해 이루어집니다.
 
-## 만료 시간 구현
+### 만료 시간 구현
 
 만료 시간을 Cache 클래스의 private field로 저장하였습니다.
 
@@ -51,7 +59,7 @@ https://github.com/walking-sunset/assignment-api
 
 캐시의 값을 읽어올 때 현재 시간과 아이템이 추가된 시간을 비교합니다. 만료 시간이 지났으면 캐시된 데이터가 오래된 것으로 간주하여 api를 새로 호출합니다.
 
-# 키보드를 통한 추천 검색어 탐색
+## 2. 키보드를 통한 추천 검색어 탐색
 
 검색어를 입력한 후 위쪽 및 아래쪽 화살표 키를 사용하여 추천 검색어를 탐색할 수 있는 기능을 구현했습니다.
 
