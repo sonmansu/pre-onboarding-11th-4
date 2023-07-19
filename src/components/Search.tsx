@@ -2,6 +2,9 @@ import React, { useRef, useState } from 'react';
 import { searchAPI } from '../apis/search';
 import { ReactComponent as SearchIcon } from '../assets/search.svg';
 import { Sick } from '../utils/types';
+import { styled } from 'styled-components';
+import { COLOR } from '../utils/styles';
+import SearchDropdown from './SearchDropdown';
 
 const EXPIRE_TIME = 20 * 1000;
 
@@ -10,14 +13,18 @@ const isEmptyObject = (obj: object): boolean => {
 };
 
 export default function Search() {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [input, setInput] = useState('');
   const [recommends, setRecommends] = useState<Sick[]>([]);
-  const cache = useRef<{ [key: string]: Sick[] }>({});
   const [selectedIdx, setSelectedIdx] = useState(-1);
+
+  const cache = useRef<{ [key: string]: Sick[] }>({});
 
   const handleChangeInput = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const input = event.currentTarget.value;
+    setInput(input);
     setSelectedIdx(-1);
     if (input === '') {
       setRecommends([]);
@@ -51,6 +58,11 @@ export default function Search() {
     }
   };
 
+  const handleOpenDropdown = () => {
+    setIsDropdownOpen(true);
+    setSelectedIdx(-1);
+  };
+
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.nativeEvent.isComposing) return;
 
@@ -82,29 +94,99 @@ export default function Search() {
   };
 
   return (
-    <div>
-      검색창
-      <input
-        className='border-2  border-solid border-cyan-600'
-        type='text'
-        onChange={handleChangeInput}
-        onKeyDown={handleKeyDown}
-      />
-      <ul>
-        {recommends.map(({ sickCd, sickNm }, idx) => (
-          <li
-            key={sickCd}
-            className={`flex items-center hover:bg-slate-300 p-2 ${
-              idx === selectedIdx ? 'bg-slate-300' : ''
-            }`}
-          >
-            <div className='w-4'>
-              <SearchIcon />
-            </div>
-            <span className='ml-2 text-sm'>{sickNm}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <Wrap>
+      <Title>
+        국내 모든 임상시험 검색하고
+        <br />
+        온라인으로 참여하기
+      </Title>
+      <SearchWrap $isFocused={isDropdownOpen}>
+        {input.length === 0 && (
+          <SearchIconWrap>
+            <SearchIcon fill='#A7AFB7' />
+          </SearchIconWrap>
+        )}
+        <Input
+          type='search'
+          value={input}
+          placeholder='      질환명을 입력해 주세요.'
+          onChange={handleChangeInput}
+          onKeyDown={handleKeyDown}
+          onFocus={handleOpenDropdown}
+        />
+        <SearchBtn>
+          <SearchIcon width={21} height={21} fill='white' />
+        </SearchBtn>
+        {
+          <SearchDropdown
+            suggestions={recommends}
+            isOpen={isDropdownOpen}
+            searchKeyword={input}
+            onClose={() => setIsDropdownOpen(false)}
+            setInput={setInput}
+            selectedIdx={selectedIdx}
+          />
+        }
+      </SearchWrap>
+    </Wrap>
   );
 }
+
+const Wrap = styled.div`
+  height: 450px;
+  padding-top: 80px;
+  background-color: #cae9ff;
+`;
+
+const Title = styled.h1`
+  margin-bottom: 40px;
+
+  font-size: 30px;
+  font-weight: 700;
+  text-align: center;
+`;
+
+const SearchWrap = styled.div<{ $isFocused: boolean }>`
+  display: flex;
+  align-items: center;
+
+  position: relative;
+
+  margin: auto;
+  width: 490px;
+  height: 70px;
+  padding-left: 20px;
+  padding-right: 10px;
+  border-radius: 42px;
+
+  background-color: white;
+  outline: 2px solid ${({ $isFocused }) => ($isFocused ? COLOR.blue : 'white')};
+`;
+
+const SearchIconWrap = styled.div`
+  position: absolute;
+`;
+
+const Input = styled.input`
+  flex: 1;
+
+  padding: 20px 10px 20px 0px;
+
+  &:focus-visible {
+    outline: none;
+  }
+`;
+
+const SearchBtn = styled.button`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 48px;
+  height: 48px;
+  margin-left: 10px;
+
+  border-radius: 50%;
+
+  background-color: ${COLOR.blue};
+`;
